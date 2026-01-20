@@ -1,0 +1,22 @@
+# Tomcat
+server:
+  port: 9205 # 请确认这个端口没有被占用
+
+# Spring
+spring:
+  application:
+    name: ruoyi-message # 应用名称，必须和 Nacos 里的文件名对应
+  profiles:
+    active: dev # 默认使用 dev 环境
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册地址
+        server-addr: 127.0.0.1:8848
+      config:
+        # 配置中心地址
+        server-addr: 127.0.0.1:8848
+        file-extension: yml
+        # 共享配置 (RuoYi 核心配置)
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
