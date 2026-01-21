@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.message.mapper.SysUserMessageMapper">
-    
+
     <resultMap type="SysUserMessage" id="SysUserMessageResult">
         <result property="messageId"    column="message_id"    />
+        <result property="title"    column="title"    />
         <result property="sender"    column="sender"    />
-        <result property="receiver"    column="receiver"    />
+        <result property="receiverId"    column="receiver_id"    />
         <result property="content"    column="content"    />
+        <result property="routerPath"    column="router_path"    />
+        <result property="readStatus"    column="read_status"    />
+        <result property="bizId"    column="biz_id"    />
         <result property="status"    column="status"    />
         <result property="createTime"    column="create_time"    />
     </resultMap>
 
     <sql id="selectSysUserMessageVo">
-        select message_id, sender, receiver, content, status, create_time from sys_user_message
+        select message_id, title, sender, receiver_id, content, router_path, read_status, biz_id, status, create_time from sys_user_message
     </sql>
 
     <select id="selectSysUserMessageList" parameterType="SysUserMessage" resultMap="SysUserMessageResult">
         <include refid="selectSysUserMessageVo"/>
-        <where>  
+        <where>
+            <if test="title != null  and title != ''"> and title like concat('%', #{title}, '%')</if>
             <if test="sender != null  and sender != ''"> and sender = #{sender}</if>
-            <if test="receiver != null  and receiver != ''"> and receiver = #{receiver}</if>
+            <if test="receiverId != null "> and receiver_id = #{receiverId}</if>
             <if test="content != null  and content != ''"> and content = #{content}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
         </where>
     </select>
-    
+
     <select id="selectSysUserMessageByMessageId" parameterType="Long" resultMap="SysUserMessageResult">
         <include refid="selectSysUserMessageVo"/>
         where message_id = #{messageId}
@@ -35,39 +40,51 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertSysUserMessage" parameterType="SysUserMessage" useGeneratedKeys="true" keyProperty="messageId">
         insert into sys_user_message
         <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null">title,</if>
             <if test="sender != null">sender,</if>
-            <if test="receiver != null">receiver,</if>
+            <if test="receiverId != null">receiver_id,</if>
             <if test="content != null">content,</if>
+            <if test="routerPath != null">router_path,</if>
+            <if test="readStatus != null">read_status,</if>
+            <if test="bizId != null">biz_id,</if>
             <if test="status != null">status,</if>
             <if test="createTime != null">create_time,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null">#{title},</if>
             <if test="sender != null">#{sender},</if>
-            <if test="receiver != null">#{receiver},</if>
+            <if test="receiverId != null">#{receiverId},</if>
             <if test="content != null">#{content},</if>
+            <if test="routerPath != null">#{routerPath},</if>
+            <if test="readStatus != null">#{readStatus},</if>
+            <if test="bizId != null">#{bizId},</if>
             <if test="status != null">#{status},</if>
             <if test="createTime != null">#{createTime},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateSysUserMessage" parameterType="SysUserMessage">
         update sys_user_message
         <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title = #{title},</if>
             <if test="sender != null">sender = #{sender},</if>
-            <if test="receiver != null">receiver = #{receiver},</if>
+            <if test="receiverId != null">receiver_id = #{receiverId},</if>
             <if test="content != null">content = #{content},</if>
+            <if test="routerPath != null">router_path = #{routerPath},</if>
+            <if test="readStatus != null">read_status = #{readStatus},</if>
+            <if test="bizId != null">biz_id = #{bizId},</if>
             <if test="status != null">status = #{status},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
         </trim>
         where message_id = #{messageId}
     </update>
 
-    <delete id="deleteSysUserMessageByMessageId" parameterType="Long">
+    <delete id="deleteSysUserMessageById" parameterType="Long">
         delete from sys_user_message where message_id = #{messageId}
     </delete>
 
-    <delete id="deleteSysUserMessageByMessageIds" parameterType="String">
-        delete from sys_user_message where message_id in 
+    <delete id="deleteSysUserMessageByIds" parameterType="String">
+        delete from sys_user_message where message_id in
         <foreach item="messageId" collection="array" open="(" separator="," close=")">
             #{messageId}
         </foreach>

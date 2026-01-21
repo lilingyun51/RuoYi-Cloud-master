@@ -2,6 +2,7 @@ package com.ruoyi.message.service.impl;
 
 import java.util.List;
 import com.ruoyi.common.core.utils.DateUtils;
+import com.ruoyi.common.security.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.message.mapper.SysUserMessageMapper;
@@ -41,6 +42,14 @@ public class SysUserMessageServiceImpl implements ISysUserMessageService
     @Override
     public List<SysUserMessage> selectSysUserMessageList(SysUserMessage sysUserMessage)
     {
+        // 核心权限控制：强制设置接收人为“当前登录用户”
+        // 这样经理(ID=1)只能看到发给 ID=1 的消息，看不到员工的消息
+        try {
+            sysUserMessage.setReceiverId(SecurityUtils.getUserId());
+        } catch (Exception e) {
+            // 如果是后台任务调用可能没有登录用户，这里忽略异常或做特殊处理
+        }
+
         return sysUserMessageMapper.selectSysUserMessageList(sysUserMessage);
     }
 

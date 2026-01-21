@@ -18,27 +18,31 @@ public class MessageConsumer
      * 重要修改：这里参数类型必须是 String，因为生产者发的是 String
      */
     @KafkaListener(topics = "sys_message_topic", groupId = "ruoyi-message-group")
-    public void listen(String content)
+    public void listen(String messageStr)
     {
-        System.out.println("------------------------------------------");
-        System.out.println("【消费者】收到消息: " + content);
-
         try {
-            // 1. 手动创建对象
-            SysUserMessage message = new SysUserMessage();
-            message.setContent(content);          // 把收到的字符串放进去
-            message.setSender("System");          // 默认发送者
-            message.setReceiver("All User");      // 默认接收者
-            message.setStatus("0");               // 状态：未读
-            message.setCreateTime(new Date());
+            // 1. 解析 JSON
+            com.alibaba.fastjson.JSONObject json = com.alibaba.fastjson.JSON.parseObject(messageStr);
 
-            // 2. 保存到数据库
+            // 2. 映射到实体类
+            SysUserMessage message = new SysUserMessage();
+            message.setTitle(json.getString("title"));
+            message.setContent(json.getString("content"));
+            message.setReceiverId(json.getLong("receiverId")); // 存入接收人ID
+            message.setRouterPath(json.getString("routerPath")); // 存入跳转路径
+            message.setBizId(json.getLong("bizId"));
+
+            // 默认值
+            message.setSender("System");
+            message.setReadStatus("0");
+            message.setCreateTime(new java.util.Date());
+
+            // 3. 入库
             messageService.insertSysUserMessage(message);
-            System.out.println("【消费者】数据库保存成功！(ID: " + message.getMessageId() + ")");
+            System.out.println("✅ 消息已入库！通知经理 ID=" + message.getReceiverId());
+
         } catch (Exception e) {
-            System.err.println("【消费者】保存失败：" + e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("------------------------------------------");
     }
 }

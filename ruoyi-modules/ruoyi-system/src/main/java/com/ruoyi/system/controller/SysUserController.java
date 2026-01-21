@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.text.Convert;
 import com.ruoyi.common.core.utils.DateUtils;
@@ -376,5 +379,38 @@ public class SysUserController extends BaseController
     public AjaxResult deptTree(SysDept dept)
     {
         return success(deptService.selectDeptTreeList(dept));
+    }
+
+
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate;
+
+    /**
+     * 模拟业务：提交请假申请 -> 发送消息给经理 (ID=1)
+     * 访问地址：http://localhost:8080/system/user/test/send/leave?leaveId=1001
+     */
+
+    @GetMapping("/test/send/leave")
+    public AjaxResult sendLeaveMessage(String leaveId)
+    {
+        if (leaveId == null) leaveId = "1001";
+
+        // 1. 组装消息对象 (标准 JSON 格式)
+        com.alibaba.fastjson.JSONObject msg = new com.alibaba.fastjson.JSONObject();
+        msg.put("title", "待审批：张三的请假申请");
+        msg.put("content", "张三申请请假3天，原因：家里有事。请尽快审批。");
+        msg.put("receiverId", 1L); // 🔥 发给 ID=1 的管理员(经理)
+
+        // 🔥 核心：前端跳转路径 (假设前端审批页是 /workflow/audit)
+        // 前端拿到这个 path 后，执行 this.$router.push(path) 就能跳过去
+        msg.put("routerPath", "/workflow/audit?id=" + leaveId);
+
+        msg.put("bizId", leaveId);
+
+        // 2. 发送 Kafka
+        kafkaTemplate.send("sys_message_topic", msg.toJSONString());
+
+        return AjaxResult.success("请假提交成功，已通知经理！单号：" + leaveId);
     }
 }

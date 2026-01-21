@@ -92,10 +92,16 @@
             @click="handleDelete(scope.row)"
             v-hasPermi="['message:message:remove']"
           >删除</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-position"
+            @click="handleProcess(scope.row)"
+          >去处理</el-button>
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -263,6 +269,22 @@ export default {
       this.download('message/message/export', {
         ...this.queryParams
       }, `message_${new Date().getTime()}.xlsx`)
+    },
+    /** 处理/跳转按钮操作 */
+    handleProcess(row) {
+          // 1. 获取后端传过来的路由地址
+          const path = row.routerPath;
+
+          // 2. 打印看看有没有值 (调试用)
+          console.log("尝试跳转到:", path);
+
+          // 3. 执行跳转
+          if (path) {
+            // 核心跳转代码
+            this.$router.push(path);
+          } else {
+            this.$modal.msgWarning("这条消息没有跳转链接");
+          }
     }
   }
 }
