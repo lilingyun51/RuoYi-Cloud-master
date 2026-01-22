@@ -79,11 +79,11 @@
         where message_id = #{messageId}
     </update>
 
-    <delete id="deleteSysUserMessageById" parameterType="Long">
+    <delete id="deleteSysUserMessageByMessageId" parameterType="Long">
         delete from sys_user_message where message_id = #{messageId}
     </delete>
 
-    <delete id="deleteSysUserMessageByIds" parameterType="String">
+    <delete id="deleteSysUserMessageByMessageIds" parameterType="String">
         delete from sys_user_message where message_id in
         <foreach item="messageId" collection="array" open="(" separator="," close=")">
             #{messageId}

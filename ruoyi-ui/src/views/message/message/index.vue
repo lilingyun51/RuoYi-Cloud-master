@@ -73,9 +73,14 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="消息ID" align="center" prop="messageId" />
       <el-table-column label="发送者" align="center" prop="sender" />
-      <el-table-column label="接收者" align="center" prop="receiver" />
+      <el-table-column label="接收者ID" align="center" prop="receiverId" />
       <el-table-column label="消息内容" align="center" prop="content" />
-      <el-table-column label="状态" align="center" prop="status" />
+      <el-table-column label="状态" align="center" prop="status">
+        <template slot-scope="scope">
+          <el-tag type="danger" v-if="scope.row.status == '0'">未读</el-tag>
+          <el-tag type="success" v-else>已读</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -95,9 +100,9 @@
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-position"
+            icon="el-icon-view"
             @click="handleProcess(scope.row)"
-          >去处理</el-button>
+          >查看</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -272,19 +277,28 @@ export default {
     },
     /** 处理/跳转按钮操作 */
     handleProcess(row) {
-          // 1. 获取后端传过来的路由地址
           const path = row.routerPath;
 
-          // 2. 打印看看有没有值 (调试用)
-          console.log("尝试跳转到:", path);
-
-          // 3. 执行跳转
-          if (path) {
-            // 核心跳转代码
-            this.$router.push(path);
-          } else {
+          // 1. 如果没有跳转路径，直接提示
+          if (!path) {
             this.$modal.msgWarning("这条消息没有跳转链接");
+            return;
           }
+
+          // 2. 准备要修改的数据 (只传 ID 和 状态)
+          const data = {
+            messageId: row.messageId,
+            status: '1' // 🔥 核心：这里强制改成 '1' (已读)
+          };
+
+          // 3. 调用后端接口更新状态
+          updateMessage(data).then(response => {
+            // 4. 更新成功后，前端界面最好也变一下（可选，因为马上要跳走了）
+            row.status = '1';
+
+            // 5. 执行跳转
+            this.$router.push(path);
+          });
     }
   }
 }
