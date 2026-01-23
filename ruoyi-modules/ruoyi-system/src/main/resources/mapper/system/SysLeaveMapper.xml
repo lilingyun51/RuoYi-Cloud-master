@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysLeaveMapper">
+
+    <resultMap type="com.ruoyi.system.domain.SysLeave" id="SysLeaveResult">
+        <id     property="leaveId"      column="leave_id"      />
+        <result property="userId"       column="user_id"       />
+        <result property="username"     column="username"      />
+        <result property="days"         column="days"          />
+        <result property="reason"       column="reason"        />
+        <result property="status"       column="status"        />
+        <result property="auditComment" column="audit_comment" />
+        <result property="createTime"   column="create_time"   />
+    </resultMap>
+
+    <select id="selectLeaveList" parameterType="com.ruoyi.system.domain.SysLeave" resultMap="SysLeaveResult">
+        SELECT l.leave_id, l.user_id, l.username, l.days, l.reason, l.status, l.create_time, l.audit_comment
+        FROM sys_leave l
+        <where>
+            <if test="userId != null">
+                AND l.user_id = #{userId}
+            </if>
+            <if test="status != null and status != ''">
+                AND l.status = #{status}
+            </if>
+            <if test="username != null and username != ''">
+                AND l.username like concat('%', #{username}, '%')
+            </if>
+        </where>
+        ORDER BY l.create_time DESC
+    </select>
+
+</mapper>

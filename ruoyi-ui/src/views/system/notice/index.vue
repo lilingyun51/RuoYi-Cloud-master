@@ -97,6 +97,13 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-view"
+                @click="handleView(scope.row)"
+                v-hasPermi="['system:notice:query']"
+          >查看</el-button>
+          <el-button
             size="mini"
             type="text"
             icon="el-icon-edit"
@@ -166,6 +173,34 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="公告详情" :visible.sync="openView" width="800px" append-to-body>
+      <el-form ref="form" :model="form" label-width="100px" size="mini">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="公告标题：">{{ form.noticeTitle }}</el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="公告类型：">
+              <dict-tag :options="dict.type.sys_notice_type" :value="form.noticeType"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="状态：">
+              <dict-tag :options="dict.type.sys_notice_status" :value="form.status"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="内容：">
+              <div v-html="form.noticeContent" style="border: 1px solid #e5e5e5; padding: 15px; border-radius: 4px; min-height: 100px; background: #f9f9f9;"></div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="openView = false">关 闭</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -195,6 +230,10 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+
+      /** 查看按钮 */
+      openView: false,
+
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -217,7 +256,9 @@ export default {
     }
   },
   created() {
-    this.getList()
+    this.getList();
+    //  新增：初始化时检查 URL 是否带有 id 参数
+    this.checkOpenDetail();
   },
   methods: {
     /** 查询公告列表 */
@@ -306,6 +347,28 @@ export default {
         this.getList()
         this.$modal.msgSuccess("删除成功")
       }).catch(() => {})
+    },
+    /**  新增：检查并自动打开详情 */
+    checkOpenDetail() {
+      const noticeId = this.$route.query.id;
+      // 只有当 ID 存在，且不是字符串 "null" 时才执行
+      if (noticeId && noticeId !== 'null') {
+          // 调用你之前写好的查看方法
+          // 构造一个模拟的 row 对象，因为 handleView 里面可能用了 row.noticeId
+          this.handleView({ noticeId: noticeId });
+      }
+    },
+    /** 查看按钮操作 */
+    handleView(row) {
+          // 1. 清空表单数据（可选，防止闪烁）
+          this.reset();
+          // 兼容逻辑：row 可能是表格行对象，也可能是我们要传的简单对象 {noticeId: xxx}
+          const noticeId = row.noticeId || this.ids;
+          // 2. 调用接口获取详细信息（为了确保获取到完整的富文本内容）
+          getNotice(noticeId).then(response => {
+            this.form = response.data;
+            this.openView = true;
+          });
     }
   }
 }

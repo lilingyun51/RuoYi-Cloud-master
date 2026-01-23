@@ -3,6 +3,8 @@ package com.ruoyi.system.mapper;
 import com.ruoyi.system.domain.SysLeave;
 import org.apache.ibatis.annotations.*;
 
+import java.util.List;
+
 // 为了简单，我们直接用注解写SQL，不用XML了，效果一样
 @Mapper
 public interface SysLeaveMapper {
@@ -21,4 +23,7 @@ public interface SysLeaveMapper {
 
     @Update("UPDATE sys_leave SET status = #{status}, audit_comment = #{auditComment}, update_time = sysdate() WHERE leave_id = #{leaveId}")
     int updateLeave(SysLeave leave);
+
+    // 新增：查询列表
+    List<SysLeave> selectLeaveList(SysLeave leave);
 }

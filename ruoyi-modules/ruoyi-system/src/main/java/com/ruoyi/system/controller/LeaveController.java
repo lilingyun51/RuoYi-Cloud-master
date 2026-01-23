@@ -9,7 +9,8 @@ import com.ruoyi.system.mapper.SysLeaveMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
-
+import com.ruoyi.common.core.web.page.TableDataInfo; // 记得导入分页对象
+import java.util.List;
 /**
  * 请假业务控制器 (正式版 - 对应数据库 sys_leave 表)
  */
@@ -45,6 +46,8 @@ public class LeaveController extends BaseController {
         msg.put("receiverId", 1L); // 发给经理 (假设经理ID=1)
         msg.put("routerPath", "/business/audit?id=" + leave.getLeaveId()); // 跳转到审批页
         msg.put("bizId", leave.getLeaveId());
+        // 显式指定发送者为当前申请人的名字
+        msg.put("sender", leave.getUsername());
 
         kafkaTemplate.send("sys_message_topic", msg.toJSONString());
 
@@ -64,7 +67,7 @@ public class LeaveController extends BaseController {
     }
 
     /**
-     * 3. 经理审批 -> 更新库 -> 🔥 回复消息给员工
+     * 3. 经理审批 -> 更新库 ->  回复消息给员工
      */
     @PostMapping("/audit")
     public AjaxResult audit(@RequestBody JSONObject auditForm) {
@@ -82,7 +85,7 @@ public class LeaveController extends BaseController {
         leave.setAuditComment(comment);
         leaveMapper.updateLeave(leave);
 
-        // C. 🔥 核心：反向通知员工 (双向通信)
+        // C. 核心：反向通知员工 (双向通信)
         JSONObject msg = new JSONObject();
 
         // 标题：显示审批结果
@@ -90,7 +93,7 @@ public class LeaveController extends BaseController {
         msg.put("title", "审批通知：" + resultText + " 您的请假申请");
 
         // 内容
-        msg.put("content", "您的请假单已审批");
+        msg.put("content",  "审批意见：" + (comment != null ? comment : "无"));
 
         // 接收人：必须是当初的申请人 ID (从数据库查出来的)
         msg.put("receiverId", leave.getUserId());
@@ -100,8 +103,35 @@ public class LeaveController extends BaseController {
 
         msg.put("bizId", leaveId);
 
+        // 显式指定发送者为当前操作人（经理 Admin）的名字
+        msg.put("sender", SecurityUtils.getUsername());
+
         kafkaTemplate.send("sys_message_topic", msg.toJSONString());
 
         return success("审批完成，已通知员工！");
     }
+
+    /**
+     * 查询请假记录列表
+     */
+    @GetMapping("/list")
+    public TableDataInfo list(SysLeave leave) {
+        startPage(); // 开启分页
+
+        // 核心逻辑：判断当前登录人是不是管理员
+        // SecurityUtils.getUserId() 获取当前人ID
+        // 如果 ID 不是 1 (超级管理员)，则强制只查自己的数据
+        Long currentUserId = SecurityUtils.getUserId();
+
+        if (!SecurityUtils.isAdmin(currentUserId)) {
+            // 如果不是Admin，强制把查询条件里的 userId 设为当前用户
+            leave.setUserId(currentUserId);
+        }
+
+        // 如果是 Admin，leave.setUserId 就不设值，MyBatis 就会查所有
+        List<SysLeave> list = leaveMapper.selectLeaveList(leave);
+
+        return getDataTable(list);
+    }
+
 }

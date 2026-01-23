@@ -32,8 +32,15 @@ public class MessageConsumer
             message.setRouterPath(json.getString("routerPath")); // 存入跳转路径
             message.setBizId(json.getLong("bizId"));
 
-            // 默认值
-            message.setSender("System");
+
+            // 修复：尝试从 JSON 里获取 sender
+            String senderName = json.getString("sender");
+            if (senderName != null && !senderName.isEmpty()) {
+                message.setSender(senderName);
+            } else {
+                message.setSender("System"); // 只有真的没传名字时，才用 System
+            }
+
             message.setReadStatus("0");
             message.setCreateTime(new java.util.Date());
 
