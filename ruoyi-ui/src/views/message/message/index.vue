@@ -153,6 +153,14 @@ export default {
   created() {
     this.getList()
   },
+  // 【新增】1. 页面加载完成后，开始监听广播
+  mounted() {
+      window.addEventListener('on-message-received', this.handleAutoRefresh);
+  },
+  // 【新增】2. 页面销毁前，移除监听（防止内存泄漏）
+  beforeDestroy() {
+      window.removeEventListener('on-message-received', this.handleAutoRefresh);
+  },
   methods: {
     /** 查询用户消息列表 */
     getList() {
@@ -272,6 +280,13 @@ export default {
             // 5. 执行跳转
             this.$router.push(path);
           });
+    },
+    // 【新增】3. 收到广播后执行的刷新动作
+    handleAutoRefresh() {
+          // 只有当前就在第一页时才自动刷新，避免用户翻页看历史时被打断（可选优化）
+          if (this.queryParams.pageNum === 1) {
+            this.getList();
+          }
     }
   }
 }

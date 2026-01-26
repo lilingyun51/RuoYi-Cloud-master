@@ -18,6 +18,9 @@ import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import { mapState } from 'vuex'
 import variables from '@/assets/styles/variables.scss'
+// 1. 引入工具
+import ws from '@/utils/websocket'
+import { Notification } from 'element-ui' // 引入 Element 组件
 
 export default {
   name: 'Layout',
@@ -57,6 +60,16 @@ export default {
     setLayout() {
       this.$refs.settingRef.openSetting()
     }
+  },
+  mounted() {
+      // 挂载 Notification 到 window，方便 websocket.js 调用 (简单粗暴的通信方式)
+      window.ELEMENT = { Notification };
+
+      // 启动 WebSocket
+      // 最好加个判断：只有登录了才连
+      if (this.$store.getters.token) {
+          ws.init();
+      }
   }
 }
 </script>

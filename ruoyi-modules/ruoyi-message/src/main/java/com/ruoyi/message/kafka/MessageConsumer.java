@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import java.util.Date;
+import com.ruoyi.message.websocket.MessageWebSocketServer;
 
 @Component
 public class MessageConsumer
@@ -46,7 +47,16 @@ public class MessageConsumer
 
             // 3. 入库
             messageService.insertSysUserMessage(message);
-            System.out.println("✅ 消息已入库！通知经理 ID=" + message.getReceiverId());
+
+            //新增】把生成的 ID 塞进 JSON 发给前端
+            json.put("messageId", message.getMessageId());
+
+            // 【新增】4. 实时推送
+            // 直接调用 WebSocket 的静态方法发送,这里要发新的 json.toJSONString()
+            MessageWebSocketServer.sendToUser(message.getReceiverId(), json.toJSONString());
+
+            System.out.println("✅ 消息已存库并尝试推送给用户 ID=" + message.getReceiverId());
+
 
         } catch (Exception e) {
             e.printStackTrace();
