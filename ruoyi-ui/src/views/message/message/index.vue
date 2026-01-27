@@ -55,9 +55,9 @@
       <el-table-column label="发送者" align="center" prop="sender" />
       <el-table-column label="接收者ID" align="center" prop="receiverId" />
       <el-table-column label="消息内容" align="center" prop="content" />
-      <el-table-column label="状态" align="center" prop="status">
+      <el-table-column label="阅读状态" align="center" prop="readStatus">
         <template slot-scope="scope">
-          <el-tag type="danger" v-if="scope.row.status == '0'">未读</el-tag>
+          <el-tag type="danger" v-if="scope.row.readStatus == '0'">未读</el-tag>
           <el-tag type="success" v-else>已读</el-tag>
         </template>
       </el-table-column>
@@ -141,7 +141,7 @@ export default {
         sender: null,
         receiver: null,
         content: null,
-        status: null,
+        readStatus: null,
       },
       // 表单参数
       form: {},
@@ -269,13 +269,13 @@ export default {
           // 2. 准备要修改的数据 (只传 ID 和 状态)
           const data = {
             messageId: row.messageId,
-            status: '1' // 🔥 核心：这里强制改成 '1' (已读)
+            readStatus: '1' //  '1' (已读)
           };
 
           // 3. 调用后端接口更新状态
           updateMessage(data).then(response => {
-            // 4. 更新成功后，前端界面最好也变一下（可选，因为马上要跳走了）
-            row.status = '1';
+            // 4. 更新成功后，前端界面最好也变一下
+            row.readStatus = '1';
 
             // 5. 执行跳转
             this.$router.push(path);

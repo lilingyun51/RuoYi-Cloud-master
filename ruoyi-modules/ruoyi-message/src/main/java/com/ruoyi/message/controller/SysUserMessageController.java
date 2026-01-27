@@ -89,6 +89,8 @@ public class SysUserMessageController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody SysUserMessage sysUserMessage)
     {
+        // 👇👇👇【新增】看看后端到底收到了什么？ 👇👇👇
+        System.out.println("🔍 修改请求接收到的参数: " + com.alibaba.fastjson.JSON.toJSONString(sysUserMessage));
         return toAjax(sysUserMessageService.updateSysUserMessage(sysUserMessage));
     }
 
