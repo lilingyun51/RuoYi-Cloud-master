@@ -43,6 +43,12 @@
     <!-- 依赖声明 -->
     <dependencyManagement>
         <dependencies>
+            <!-- 我的消息组件-->
+            <dependency>
+                <groupId>com.ruoyi</groupId>
+                <artifactId>ruoyi-common-message</artifactId>
+                <version>${ruoyi.version}</version>
+            </dependency>
 
             <!-- 覆盖SpringFramework的依赖配置-->
             <dependency>
